@@ -1,42 +1,44 @@
 import sqlite3
 
 def get_db_connection():
-    """Establish a connection to a local SQLite database file"""
     conn = sqlite3.connect("test_qa.db")
-    # This allows us to access columns by name (like a dictionary)
     conn.row_factory = sqlite3.Row
     return conn
 
 def setup_test_database():
-    """Create a mock users table and insert test data"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Drop table if it exists to start fresh
-    cursor.execute("DROP TABLE IF EXISTS users;")
-    
-    # Create table
+    # Create users and orders tables
+    cursor.execute("DROP TABLE IF EXISTS orders;")
     cursor.execute("""
-        CREATE TABLE users (
+        CREATE TABLE orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
+            item_name TEXT NOT NULL,
+            total_price REAL NOT NULL,
             status TEXT NOT NULL
         );
     """)
-    
-    # Insert a test record (Data Seeding)
-    cursor.execute("INSERT INTO users (username, status) VALUES (?, ?);", ("standard_user", "active"))
-    
     conn.commit()
     conn.close()
 
-def query_user_status(username: str):
-    """Query the database for a user's status (Backend Validation)"""
+def insert_order_record(username: str, item_name: str, total_price: float):
+    """Simulate backend order logging during checkout"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT status FROM users WHERE username = ?;", (username,))
-    row = cursor.fetchone()
-    
+    cursor.execute(
+        "INSERT INTO orders (username, item_name, total_price, status) VALUES (?, ?, ?, ?);",
+        (username, item_name, total_price, "completed")
+    )
+    conn.commit()
     conn.close()
-    return row["status"] if row else None
+
+def get_latest_order_for_user(username: str):
+    """Query backend database for validation"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM orders WHERE username = ? ORDER BY id DESC LIMIT 1;", (username,))
+    row = cursor.fetchone()
+    conn.close()
+    return row
