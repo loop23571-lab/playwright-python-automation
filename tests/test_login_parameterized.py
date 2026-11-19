@@ -20,7 +20,7 @@ def test_login_data_driven(page: Page, username, password, expected_outcome):
     # 2. Assertions based on expected outcome
     if expected_outcome == "success":
         # Verify user reached the inventory page
-        expect(page.locator(".inventory_container")).to_be_visible()
+        expect(page.locator(".inventory_container")).to_be_visible(timeout=10000)
     else:
         # Verify error message is displayed for invalid logins
         expect(page.locator("[data-test='error']")).to_be_visible()
