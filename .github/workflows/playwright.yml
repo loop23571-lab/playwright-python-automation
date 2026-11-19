@@ -2,33 +2,37 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        cache: 'pip'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        # If you haven't created a requirements.txt yet, install manually:
-        # pip install pytest playwright
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
 
-    - name: Install Playwright browsers
-      run: playwright install --with-deps
+      - name: Run Playwright tests
+        run: python -m pytest -v
 
-    - name: Run pytest
-      run: python -m pytest -v
+      - name: Upload HTML Report and Traces
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-artifacts
+          path: |
+            reports/report.html
+            test-results/
+          retention-days: 14
